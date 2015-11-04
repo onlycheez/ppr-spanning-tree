@@ -10,6 +10,6 @@ struct node
 /**
  * Reads graph represented as adjacency matrix from file.
  */
-struct node* list_new_from_file(const char *filename);
+struct node* graph_new_from_file(const char *filename);
 
-void list_print(struct node *root);
+void graph_dump(struct node *root);

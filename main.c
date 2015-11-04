@@ -1,10 +1,10 @@
 
-#include "list.h"
+#include "graph.h"
 
 int main(int argc, char *argv[])
 {
-  struct node *root = list_new_from_file(argv[1]);
-  list_print(root);
+  struct node *root = graph_new_from_file(argv[1]);
+  graph_dump(root);
 
   return 0;
 }
