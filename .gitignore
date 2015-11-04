@@ -1,3 +1,9 @@
+# Matrix generator
+generator.bin
+
+# OUtput binary
+tree
+
 # Object files
 *.o
 *.ko
