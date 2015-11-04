@@ -4,8 +4,6 @@
 #include <string.h>
 #include "graph.h"
 
-#define BUFFER_LENGTH 1024
-
 static int graph_read_nodes_count(FILE *file)
 {
   char *line = NULL;
@@ -61,7 +59,6 @@ static void graph_set_node_neighbors(struct node *node, const char *line,
   {
     if (line[i] == '1')
     {
-      //printf("Setting neighbor: 0x%x\n", nodes_array[i]);
       neighbors[node->neighbors_count] = nodes_array[i];
       node->neighbors_count += 1;
     }
