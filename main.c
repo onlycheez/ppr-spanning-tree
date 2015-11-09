@@ -1,10 +1,10 @@
 
 #include "graph.h"
+#include "stack.h"
 
 int main(int argc, char *argv[])
 {
-  struct node *root = graph_new_from_file(argv[1]);
-  graph_dump(root);
+  struct vertex **graph = graph_new_from_file(argv[1]);
 
   return 0;
 }

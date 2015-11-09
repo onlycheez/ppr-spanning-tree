@@ -25,9 +25,9 @@ static int graph_read_nodes_count(FILE *file)
   return value;
 }
 
-static struct node* graph_new_node(char id)
+static struct vertex* graph_new_node(char id)
 {
-  struct node* node = malloc(sizeof(struct node));
+  struct vertex* node = malloc(sizeof(struct vertex));
   node->id = id;
   node->visited = 0;
   node->neighbors_count = 0;
@@ -36,9 +36,9 @@ static struct node* graph_new_node(char id)
   return node;
 }
 
-static struct node** graph_init_node_array(int count)
+static struct vertex** graph_init_node_array(int count)
 {
-  struct node** array = malloc(count * sizeof(struct node *));
+  struct vertex** array = malloc(count * sizeof(struct vertex *));
 
   int i;
   for (i = 0; i < count; i++)
@@ -49,10 +49,10 @@ static struct node** graph_init_node_array(int count)
   return array;
 }
 
-static void graph_set_node_neighbors(struct node *node, const char *line,
-  struct node **nodes_array, int count)
+static void graph_set_node_neighbors(struct vertex *node, const char *line,
+  struct vertex **nodes_array, int count)
 {
-  struct node **neighbors = malloc(count * sizeof(struct node *));
+  struct vertex **neighbors = malloc(count * sizeof(struct vertex *));
 
   int i;
   for (i = 0; i < count; i++)
@@ -64,12 +64,12 @@ static void graph_set_node_neighbors(struct node *node, const char *line,
     }
   }
 
-  node->neighbors = malloc(node->neighbors_count * sizeof(struct node *));
-  memcpy(node->neighbors, neighbors, (node->neighbors_count) * sizeof(struct node *));
+  node->neighbors = malloc(node->neighbors_count * sizeof(struct vertex *));
+  memcpy(node->neighbors, neighbors, (node->neighbors_count) * sizeof(struct vertex *));
   free(neighbors);
 }
 
-struct node* graph_new_from_file(const char *filename)
+struct vertex** graph_new_from_file(const char *filename)
 {
   FILE *file = fopen(filename, "r");
   if (!file)
@@ -81,7 +81,7 @@ struct node* graph_new_from_file(const char *filename)
   int nodes_count = graph_read_nodes_count(file);
   int line_length = nodes_count + 1; // +1 for new line character.
   printf("Nodes count: %d\n", nodes_count);
-  struct node **nodes_array = graph_init_node_array(nodes_count);
+  struct vertex **nodes_array = graph_init_node_array(nodes_count);
   int node_nr = 0;
   char *line = malloc(line_length);
 
@@ -100,13 +100,10 @@ struct node* graph_new_from_file(const char *filename)
 
   free(line);
 
-  struct node *root = nodes_array[0];
-  free(nodes_array);
-
-  return root;
+  return nodes_array;
 }
 
-static void graph_dump_level(struct node *node, int indent)
+static void graph_dump_level(struct vertex *node, int indent)
 {
   if (node->visited)
   {
@@ -129,7 +126,7 @@ static void graph_dump_level(struct node *node, int indent)
   }
 }
 
-void graph_dump(struct node *root)
+void graph_dump(struct vertex *root)
 {
   graph_dump_level(root, 0);
 }

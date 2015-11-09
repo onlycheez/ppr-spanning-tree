@@ -1,15 +1,15 @@
 
-struct node
+struct vertex
 {
   int id;
   char visited;
-  struct node **neighbors;
+  struct vertex **neighbors;
   int neighbors_count;
 };
 
 /**
  * Reads graph represented as adjacency matrix from file.
  */
-struct node* graph_new_from_file(const char *filename);
+struct vertex** graph_new_from_file(const char *filename);
 
-void graph_dump(struct node *root);
+void graph_dump(struct vertex *root);

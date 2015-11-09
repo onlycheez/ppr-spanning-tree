@@ -1,9 +1,9 @@
 CC=gcc
 SRC=main.c graph.c
-HDR=graph.h
+HDR=graph.h stack.h
 
 all: $(SRC) $(HDR)
-	$(CC) $(SRC) -o tree
+	$(CC) $(SRC) -ggdb -o tree
 
 clean:
 	rm tree
