@@ -1,6 +1,6 @@
 CC=gcc
-SRC=main.c graph.c
-HDR=graph.h stack.h
+SRC=main.c graph.c list.c
+HDR=graph.h list.h
 
 all: $(SRC) $(HDR)
 	$(CC) $(SRC) -ggdb -o tree
