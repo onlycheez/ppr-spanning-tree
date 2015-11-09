@@ -1,6 +1,6 @@
 
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
 
 #include "graph.h"
 #include "list.h"
@@ -59,25 +59,46 @@ void find_path(node** stack_top, node* list, int size)
   }
 }
 
+void dump_solution(node *list)
+{
+  node *tmp = list;
+  printf("%d\n", ((struct vertex *) tmp->data)->id);
+  tmp = tmp->next;
+
+  int i, line_length = 1;
+
+  while (tmp)
+  {
+    for (i = 0; i < line_length; i++)
+    {
+      printf("%d ", ((struct vertex *) tmp->data)->id);
+      tmp = tmp->next;
+    }
+    printf("\n");
+    line_length *= 2;
+  }
+}
+
 double best_height = 1000.0;
 node *best_solution;
 
 int main(int argc, char *argv[])
 {
-  struct vertex **graph = graph_new_from_file(argv[1]);
+  int count = 0;
+  struct vertex **graph = graph_new_from_file(argv[1], &count);
   node *record = list_push(NULL, graph[0]);
   node *top = list_push(NULL, record);
+
+  int ideal_height = ceilf(log2(count)) + 1;
 
   while (list_size(top) > 0)
   {
     node *current_record = list_pop(&top);
     node *record_tmp = current_record;
 
-    printf("Record: ");
     while (record_tmp)
     {
       struct vertex *current_vertex = (record_tmp->data);
-      printf("%d, ", current_vertex->id);
       if (current_vertex->id != DUMMY_NODE_ID)
       {
         current_vertex->visited = 1;
@@ -87,15 +108,18 @@ int main(int argc, char *argv[])
     }
     printf("\n");
 
-    double height = log2(list_size(current_record));
+    double height = log2(list_size(current_record)) + 1;
 
     if (graph_all_visited(graph))
     {
-      printf("graph_all_visited\n");
       if (height < best_height)
       {
         best_height = height;
         best_solution = current_record;
+        if (height == ideal_height)
+        {
+          goto end;
+        }
       }
     }
     else if (height < best_height)
@@ -110,9 +134,12 @@ int main(int argc, char *argv[])
       current_vertex->visited = 0;
       record_tmp = record_tmp->next;
     }
+
+    list_free(current_record);
   }
 
-  graph_dump(graph[0]);
+end:
+  dump_solution(best_solution);
 
   return 0;
 }

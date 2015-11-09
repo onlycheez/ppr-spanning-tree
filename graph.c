@@ -83,7 +83,7 @@ static struct vertex* graph_init_dummy_node()
   return dummy_node;
 }
 
-struct vertex** graph_new_from_file(const char *filename)
+struct vertex** graph_new_from_file(const char *filename, int *nodes_count)
 {
   FILE *file = fopen(filename, "r");
   if (!file)
@@ -92,17 +92,17 @@ struct vertex** graph_new_from_file(const char *filename)
     exit(1);
   }
 
-  int nodes_count = graph_read_nodes_count(file);
-  int line_length = nodes_count + 1; // +1 for new line character.
-  printf("Nodes count: %d\n", nodes_count);
+  *nodes_count = graph_read_nodes_count(file);
+  int line_length = *nodes_count + 1; // +1 for new line character.
+  printf("Nodes count: %d\n", *nodes_count);
   // + 1 for dummy vertex
-  struct vertex **nodes_array = graph_init_node_array(nodes_count + 1);
+  struct vertex **nodes_array = graph_init_node_array(*nodes_count + 1);
   int node_nr = 0;
   char *line = malloc(line_length);
 
-  nodes_array[nodes_count] = graph_init_dummy_node();
+  nodes_array[*nodes_count] = graph_init_dummy_node();
 
-  while (node_nr < nodes_count)
+  while (node_nr < *nodes_count)
   {
     if (getline(&line, &line_length, file) < 0)
     {
@@ -111,7 +111,7 @@ struct vertex** graph_new_from_file(const char *filename)
     }
 
     graph_set_node_neighbors(nodes_array[node_nr], line, nodes_array,
-      nodes_count);
+      *nodes_count);
     node_nr += 1;
   }
 
