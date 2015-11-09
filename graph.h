@@ -1,4 +1,6 @@
 
+#define DUMMY_NODE_ID -1
+
 struct vertex
 {
   int id;

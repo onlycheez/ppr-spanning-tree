@@ -22,12 +22,12 @@ void* list_pop(node **first)
     return retval;
 }
 
-void list_push(node **first, void *value)
+node* list_push(node *first, void *value)
 {
     node *tmp = malloc(sizeof(node));
-    tmp->next = *first;
+    tmp->next = first;
     tmp->data = value;
-    *first = tmp;
+    return tmp;
 }
 
 node* list_copy(node *first)
@@ -53,6 +53,19 @@ node* list_copy(node *first)
     return first2;
 }
 
+void list_free(node *root)
+{
+    node *tmp = root;
+    node *tmp_next;
+
+    while (tmp)
+    {
+        tmp_next = tmp->next;
+        free(tmp);
+        tmp = tmp_next;
+    }
+}
+
 void list_enque(node ** first,void * value)
 {
     node *tmp = malloc(sizeof(node));
@@ -75,7 +88,7 @@ void list_enque(node ** first,void * value)
     }
 }
 
-int list_size(node * first)
+int list_size(node *first)
 {
     node *tmp = first;
     int count = 0;

@@ -1,9 +1,10 @@
 CC=gcc
 SRC=main.c graph.c list.c
 HDR=graph.h list.h
+LIB=-lm
 
 all: $(SRC) $(HDR)
-	$(CC) $(SRC) -ggdb -o tree
+	$(CC) $(SRC) $(LIB) -ggdb -o tree
 
 clean:
 	rm tree

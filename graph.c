@@ -64,9 +64,23 @@ static void graph_set_node_neighbors(struct vertex *node, const char *line,
     }
   }
 
+  // Add last dummy neighbor
+  neighbors[node->neighbors_count] = nodes_array[count];
+  node->neighbors_count += 1;
+
   node->neighbors = malloc(node->neighbors_count * sizeof(struct vertex *));
   memcpy(node->neighbors, neighbors, (node->neighbors_count) * sizeof(struct vertex *));
   free(neighbors);
+}
+
+static struct vertex* graph_init_dummy_node()
+{
+  struct vertex *dummy_node = graph_new_node(DUMMY_NODE_ID);
+  dummy_node->neighbors = malloc(sizeof(struct vertex *));
+  dummy_node->neighbors[0] = dummy_node;
+  dummy_node->neighbors_count = 1;
+
+  return dummy_node;
 }
 
 struct vertex** graph_new_from_file(const char *filename)
@@ -81,9 +95,12 @@ struct vertex** graph_new_from_file(const char *filename)
   int nodes_count = graph_read_nodes_count(file);
   int line_length = nodes_count + 1; // +1 for new line character.
   printf("Nodes count: %d\n", nodes_count);
-  struct vertex **nodes_array = graph_init_node_array(nodes_count);
+  // + 1 for dummy vertex
+  struct vertex **nodes_array = graph_init_node_array(nodes_count + 1);
   int node_nr = 0;
   char *line = malloc(line_length);
+
+  nodes_array[nodes_count] = graph_init_dummy_node();
 
   while (node_nr < nodes_count)
   {
@@ -97,6 +114,7 @@ struct vertex** graph_new_from_file(const char *filename)
       nodes_count);
     node_nr += 1;
   }
+
 
   free(line);
 
@@ -112,15 +130,16 @@ static void graph_dump_level(struct vertex *node, int indent)
 
   node->visited = 1;
 
-  int i;
-  for (i = 0; i < indent; i++)
+  int j;
+  for (j = 0; j < indent; j++)
   {
     printf(" ");
   }
   printf("%d (%d)\n", node->id, node->neighbors_count);
 
 
-  for (i = 0; i < node->neighbors_count - 1; i++)
+  int i;
+  for (i = 0; i < node->neighbors_count; ++i)
   {
     graph_dump_level(node->neighbors[i], indent + 2);
   }
@@ -129,4 +148,20 @@ static void graph_dump_level(struct vertex *node, int indent)
 void graph_dump(struct vertex *root)
 {
   graph_dump_level(root, 0);
+}
+
+int graph_all_visited(struct vertex **root)
+{
+  int i = 0;
+
+  while (root[i]->id != DUMMY_NODE_ID)
+  {
+    if (root[i]->visited == 0)
+    {
+      return 0;
+    }
+    i += 1;
+  }
+
+  return 1;
 }
