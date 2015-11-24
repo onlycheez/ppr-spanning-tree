@@ -1,5 +1,6 @@
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "graph.h"
@@ -71,7 +72,7 @@ void dump_solution(node *list)
   {
     for (i = 0; i < line_length; i++)
     {
-      printf("%d ", ((struct vertex *) tmp->data)->id);
+      printf("%02d ", ((struct vertex *) tmp->data)->id);
       tmp = tmp->next;
     }
     printf("\n");
@@ -96,9 +97,11 @@ int main(int argc, char *argv[])
     node *current_record = list_pop(&top);
     node *record_tmp = current_record;
 
+    printf("Record: ");
     while (record_tmp)
     {
       struct vertex *current_vertex = (record_tmp->data);
+      printf("%d, ", current_vertex->id);
       if (current_vertex->id != DUMMY_NODE_ID)
       {
         current_vertex->visited = 1;
