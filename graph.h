@@ -9,9 +9,16 @@ struct vertex
   int neighbors_count;
 };
 
+struct graph
+{
+  int size;
+  struct vertex *root;
+  struct vertex **nodes_array;
+};
+
 /**
  * Reads graph represented as adjacency matrix from file.
  */
-struct vertex** graph_new_from_file(const char *filename, int *nodes_count);
+struct graph* graph_new_from_file(const char *filename);
 
 void graph_dump(struct vertex *root);

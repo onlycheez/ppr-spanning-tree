@@ -83,7 +83,16 @@ static struct vertex* graph_init_dummy_node()
   return dummy_node;
 }
 
-struct vertex** graph_new_from_file(const char *filename, int *nodes_count)
+struct graph* graph_init_empty(void)
+{
+  struct graph* graph = malloc(sizeof(struct graph));
+  graph->root = NULL;
+  graph->size = 0;
+
+  return graph;
+}
+
+struct graph* graph_new_from_file(const char *filename)
 {
   FILE *file = fopen(filename, "r");
   if (!file)
@@ -92,17 +101,19 @@ struct vertex** graph_new_from_file(const char *filename, int *nodes_count)
     exit(1);
   }
 
-  *nodes_count = graph_read_nodes_count(file);
-  int line_length = *nodes_count + 1; // +1 for new line character.
-  printf("Nodes count: %d\n", *nodes_count);
+  struct graph* graph = graph_init_empty();
+  graph->size = graph_read_nodes_count(file);
+
+  int line_length = graph->size + 1; // +1 for new line character.
+  printf("Nodes count: %d\n", graph->size);
   // + 1 for dummy vertex
-  struct vertex **nodes_array = graph_init_node_array(*nodes_count + 1);
+  graph->nodes_array = graph_init_node_array(graph->size + 1);
   int node_nr = 0;
   char *line = malloc(line_length);
 
-  nodes_array[*nodes_count] = graph_init_dummy_node();
+  graph->nodes_array[graph->size] = graph_init_dummy_node();
 
-  while (node_nr < *nodes_count)
+  while (node_nr < graph->size)
   {
     if (getline(&line, &line_length, file) < 0)
     {
@@ -110,15 +121,14 @@ struct vertex** graph_new_from_file(const char *filename, int *nodes_count)
       exit(1);
     }
 
-    graph_set_node_neighbors(nodes_array[node_nr], line, nodes_array,
-      *nodes_count);
+    graph_set_node_neighbors(graph->nodes_array[node_nr], line,
+      graph->nodes_array, graph->size);
     node_nr += 1;
   }
 
-
   free(line);
 
-  return nodes_array;
+  return graph;
 }
 
 static void graph_dump_level(struct vertex *node, int indent)
@@ -150,13 +160,13 @@ void graph_dump(struct vertex *root)
   graph_dump_level(root, 0);
 }
 
-int graph_all_visited(struct vertex **root)
+int graph_all_visited(struct graph *graph)
 {
   int i = 0;
 
-  while (root[i]->id != DUMMY_NODE_ID)
+  while (graph->nodes_array[i]->id != DUMMY_NODE_ID)
   {
-    if (root[i]->visited == 0)
+    if (graph->nodes_array[i]->visited == 0)
     {
       return 0;
     }

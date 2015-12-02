@@ -85,12 +85,11 @@ node *best_solution;
 
 int main(int argc, char *argv[])
 {
-  int count = 0;
-  struct vertex **graph = graph_new_from_file(argv[1], &count);
-  node *record = list_push(NULL, graph[0]);
+  struct graph *graph = graph_new_from_file(argv[1]);
+  node *record = list_push(NULL, graph->nodes_array[0]);
   node *top = list_push(NULL, record);
 
-  int ideal_height = ceilf(log2(count)) + 1;
+  int ideal_height = ceilf(log2(graph->size)) + 1;
 
   while (list_size(top) > 0)
   {
