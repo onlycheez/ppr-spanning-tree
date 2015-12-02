@@ -22,3 +22,8 @@ struct graph
 struct graph* graph_new_from_file(const char *filename);
 
 void graph_dump(struct vertex *root);
+
+/**
+ * Free all memory associated with graph structure.
+ */
+void graph_free(struct graph *graph);

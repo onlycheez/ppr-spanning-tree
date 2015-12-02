@@ -175,3 +175,25 @@ int graph_all_visited(struct graph *graph)
 
   return 1;
 }
+
+static void graph_free_vertex(struct vertex *vertex)
+{
+  free(vertex->neighbors);
+  free(vertex);
+}
+
+void graph_free(struct graph *graph)
+{
+  int i;
+
+  for (i = 0; i < graph->size; i++)
+  {
+    graph_free_vertex(graph->nodes_array[i]);
+  }
+
+  // Delete the extra dummy node.
+  graph_free_vertex(graph->nodes_array[graph->size]);
+
+  free(graph->nodes_array);
+  free(graph);
+}

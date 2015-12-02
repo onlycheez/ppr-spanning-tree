@@ -140,8 +140,11 @@ int main(int argc, char *argv[])
     list_free(current_record);
   }
 
+
 end:
   dump_solution(best_solution);
+
+  graph_free(graph);
 
   return 0;
 }
