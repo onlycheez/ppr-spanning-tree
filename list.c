@@ -9,32 +9,32 @@
 #include <stdlib.h>
 #include "list.h"
 
-void* list_pop(node **first)
+void* list_pop(list_node **first)
 {
     if (!(*first))
     {
         return NULL;
     }
 
-    node *tmp = (*first)->next;
+    list_node *tmp = (*first)->next;
     void *retval = (*first)->data;
     *first = tmp;
     return retval;
 }
 
-node* list_push(node *first, void *value)
+list_node* list_push(list_node *first, void *value)
 {
-    node *tmp = malloc(sizeof(node));
+    list_node *tmp = malloc(sizeof(list_node));
     tmp->next = first;
     tmp->data = value;
     return tmp;
 }
 
-node* list_copy(node *first)
+list_node* list_copy(list_node *first)
 {
-    node *tmp2 = NULL;
-    node *first2 = malloc(sizeof(node));
-    node *tmp = first2;
+    list_node *tmp2 = NULL;
+    list_node *first2 = malloc(sizeof(list_node));
+    list_node *tmp = first2;
 
     if (first)
     {
@@ -42,7 +42,7 @@ node* list_copy(node *first)
         {
             tmp->data = first->data;
             tmp2 = tmp;
-            tmp = malloc(sizeof(node));
+            tmp = malloc(sizeof(list_node));
             tmp2->next = tmp;
             first = first->next;
         }
@@ -53,10 +53,10 @@ node* list_copy(node *first)
     return first2;
 }
 
-void list_free(node *root)
+void list_free(list_node *root)
 {
-    node *tmp = root;
-    node *tmp_next;
+    list_node *tmp = root;
+    list_node *tmp_next;
 
     while (tmp)
     {
@@ -66,13 +66,13 @@ void list_free(node *root)
     }
 }
 
-void list_enque(node ** first,void * value)
+void list_enque(list_node ** first,void * value)
 {
-    node *tmp = malloc(sizeof(node));
+    list_node *tmp = malloc(sizeof(list_node));
     tmp->next = NULL;
     tmp->data = value;
 
-    node *tmp2 = *first;
+    list_node *tmp2 = *first;
 
     if (!tmp2)
     {
@@ -88,9 +88,9 @@ void list_enque(node ** first,void * value)
     }
 }
 
-int list_size(node *first)
+int list_size(list_node *first)
 {
-    node *tmp = first;
+    list_node *tmp = first;
     int count = 0;
 
     while (tmp)
@@ -100,4 +100,22 @@ int list_size(node *first)
     }
 
     return count;
+}
+
+list_node* list_at_index(list_node *root, int index)
+{
+  if (!root)
+  {
+    return NULL;
+  }
+
+  list_node *tmp = root;
+  int i = 0;
+  while (i < index)
+  {
+    tmp = tmp->next;
+    i += 1;
+  }
+
+  return tmp;
 }

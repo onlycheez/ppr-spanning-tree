@@ -1,19 +1,19 @@
 
 #define DUMMY_NODE_ID -1
 
-struct vertex
+typedef struct _graph_node
 {
   int id;
   char visited;
-  struct vertex **neighbors;
+  struct _graph_node **neighbors;
   int neighbors_count;
-};
+} graph_node;
 
 struct graph
 {
   int size;
-  struct vertex *root;
-  struct vertex **nodes_array;
+  graph_node *root;
+  graph_node **nodes;
 };
 
 /**
@@ -21,7 +21,7 @@ struct graph
  */
 struct graph* graph_new_from_file(const char *filename);
 
-void graph_dump(struct vertex *root);
+void graph_dump(graph_node *root);
 
 /**
  * Free all memory associated with graph structure.

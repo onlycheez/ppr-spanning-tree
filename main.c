@@ -6,64 +6,48 @@
 #include "graph.h"
 #include "list.h"
 
-node* list_at_index(node *root, int index)
+void find_solution(list_node** solutions, list_node* current_solution, int size)
 {
-  if (!root)
-  {
-    return NULL;
-  }
-
-  node *tmp = root;
-  int i = 0;
-  while (i < index)
-  {
-    tmp = tmp->next;
-    i += 1;
-  }
-
-  return tmp;
-}
-
-void find_path(node** stack_top, node* list, int size)
-{
-  int node_idx = list_size(list) - size;
-
-  node *current_node = list_at_index(list, node_idx);
-  struct vertex *current_vertex = current_node->data;
+  int current_solution_node_idx = list_size(current_solution) - size;
+  list_node *current_solution_node = list_at_index(current_solution,
+    current_solution_node_idx);
+  graph_node *current_node = current_solution_node->data;
 
   int i;
-  for (i = current_vertex->neighbors_count - 1; i >= 0 ; i--)
+  for (i = current_node->neighbors_count - 1; i >= 0 ; i--)
   {
-    struct vertex *neighbor = current_vertex->neighbors[i];
+    graph_node *neighbor = current_node->neighbors[i];
 
-    if (!(neighbor->visited))
+    if ((neighbor->visited))
     {
-      node *top = list_copy(list);
-      list_enque(&top, neighbor);
+      continue;
+    }
 
-      if (list_size(top) >= (2 * size))
-      {
-        *stack_top = list_push(*stack_top, (void *)top);
-      }
-      else
-      {
-        if (neighbor->id != DUMMY_NODE_ID)
-        {
-          neighbor->visited = 1;
-        }
+    list_node *new_solution = list_copy(current_solution);
+    list_enque(&new_solution, neighbor);
 
-        find_path(stack_top, top, size);
-        neighbor->visited = 0;
-        list_free(top);
+    if (list_size(new_solution) == (2 * size))
+    {
+      *solutions = list_push(*solutions, new_solution);
+    }
+    else
+    {
+      if (neighbor->id != DUMMY_NODE_ID)
+      {
+        neighbor->visited = 1;
       }
+
+      find_solution(solutions, new_solution, size);
+      neighbor->visited = 0;
+      list_free(new_solution);
     }
   }
 }
 
-void dump_solution(node *list)
+void dump_solution(list_node *root)
 {
-  node *tmp = list;
-  printf("%d\n", ((struct vertex *) tmp->data)->id);
+  list_node *tmp = root;
+  printf("%d\n", ((graph_node *) tmp->data)->id);
   tmp = tmp->next;
 
   int i, line_length = 1;
@@ -72,7 +56,7 @@ void dump_solution(node *list)
   {
     for (i = 0; i < line_length; i++)
     {
-      printf("%02d ", ((struct vertex *) tmp->data)->id);
+      printf("%02d ", ((graph_node *) tmp->data)->id);
       tmp = tmp->next;
     }
     printf("\n");
@@ -80,70 +64,72 @@ void dump_solution(node *list)
   }
 }
 
+void mark_nodes(list_node *root, int is_visited)
+{
+  list_node *tmp = root;
+
+  while (tmp)
+  {
+    graph_node *node = (graph_node *) tmp->data;
+
+    if (node->id != DUMMY_NODE_ID)
+    {
+      node->visited = 1;
+    }
+
+    tmp = tmp->next;
+  }
+}
+
+void mark_nodes_visited(list_node *root)
+{
+  mark_nodes(root, 1);
+}
+
+void mark_nodes_unvisited(list_node *root)
+{
+  mark_nodes(root, 0);
+}
+
 double best_height = 1000.0;
-node *best_solution;
+list_node *best_solution;
 
 int main(int argc, char *argv[])
 {
   struct graph *graph = graph_new_from_file(argv[1]);
-  node *record = list_push(NULL, graph->nodes_array[0]);
-  node *top = list_push(NULL, record);
-
   int ideal_height = ceilf(log2(graph->size)) + 1;
 
-  while (list_size(top) > 0)
+  list_node *solution = list_push(NULL, graph->root);
+  list_node *solutions = list_push(NULL, solution);
+
+  while (list_size(solutions) > 0)
   {
-    node *current_record = list_pop(&top);
-    node *record_tmp = current_record;
-
-    printf("Record: ");
-    while (record_tmp)
-    {
-      struct vertex *current_vertex = (record_tmp->data);
-      printf("%d, ", current_vertex->id);
-      if (current_vertex->id != DUMMY_NODE_ID)
-      {
-        current_vertex->visited = 1;
-      }
-
-      record_tmp = record_tmp->next;
-    }
-    printf("\n");
-
-    double height = log2(list_size(current_record)) + 1;
+    list_node *current_solution = list_pop(&solutions);
+    mark_nodes_visited(current_solution);
+    double height = log2(list_size(current_solution)) + 1;
 
     if (graph_all_visited(graph))
     {
       if (height < best_height)
       {
         best_height = height;
-        best_solution = current_record;
+        best_solution = current_solution;
         if (height == ideal_height)
         {
-          goto end;
+          break;
         }
       }
     }
     else if (height < best_height)
     {
-      find_path(&top, current_record, list_size(current_record));
+      find_solution(&solutions, current_solution, list_size(current_solution));
     }
 
-    record_tmp = current_record;
-    while (record_tmp)
-    {
-      struct vertex *current_vertex = (record_tmp->data);
-      current_vertex->visited = 0;
-      record_tmp = record_tmp->next;
-    }
-
-    list_free(current_record);
+    mark_nodes_unvisited(current_solution);
+    list_free(current_solution);
   }
 
-
-end:
   dump_solution(best_solution);
-
   graph_free(graph);
 
   return 0;

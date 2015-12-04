@@ -1,13 +1,13 @@
 
-typedef struct point {
+typedef struct _list_node {
     void *data;
-    struct point *next;
-} node;
+    struct _list_node *next;
+} list_node;
 
-void *list_pop(node ** first);
-node* list_push(node *first, void *value);
-node *list_copy(node * first);
-void list_enque(node ** first, void *value);
-int list_size(node * first);
-void list_free(node *root);
-
+void *list_pop(list_node ** first);
+list_node* list_push(list_node *first, void *value);
+list_node *list_copy(list_node * first);
+void list_enque(list_node ** first, void *value);
+int list_size(list_node * first);
+void list_free(list_node *root);
+list_node* list_at_index(list_node *root, int index);
