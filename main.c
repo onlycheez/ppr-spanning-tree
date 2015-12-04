@@ -1,10 +1,18 @@
 
 #include <math.h>
+#include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "graph.h"
 #include "list.h"
+
+#define TAG_REQUEST_DATA 1
+#define TAG_DATA 2
+#define TAG_FINISHED 3
+#define TAG_FINISH 4
+
+#define MSG_LENGTH 128
 
 void find_solution(list_node** solutions, list_node* current_solution, int size)
 {
@@ -94,43 +102,133 @@ void mark_nodes_unvisited(list_node *root)
 double best_height = 1000.0;
 list_node *best_solution;
 
+list_node* message_serialize()
+{
+  return NULL;
+}
+
+list_node* message_deserialize()
+{
+  return NULL;
+}
+
+int message_is_finished()
+{
+  return NULL;
+}
+
 int main(int argc, char *argv[])
 {
+  char message[MSG_LENGTH];
+  MPI_Status status;
+  int my_rank, p;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &p);
+
   struct graph *graph = graph_new_from_file(argv[1]);
   int ideal_height = ceilf(log2(graph->size)) + 1;
 
-  list_node *solution = list_push(NULL, graph->root);
-  list_node *solutions = list_push(NULL, solution);
+  list_node *solution;
+  list_node *solutions;
 
-  while (list_size(solutions) > 0)
+  if (my_rank == 0)
   {
-    list_node *current_solution = list_pop(&solutions);
-    mark_nodes_visited(current_solution);
-    double height = log2(list_size(current_solution)) + 1;
+    solution = list_push(NULL, graph->root);
+    solutions = list_push(NULL, solution);
+  }
+  else
+  {
+    MPI_Send(NULL, 0, MPI_CHAR, 0, TAG_REQUEST_DATA, MPI_COMM_WORLD);
+    MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, 0, TAG_DATA, MPI_COMM_WORLD, &status);
+    solutions = message_deserialize(message);
+  }
 
-    if (graph_all_visited(graph))
+  int repeat = 1;
+
+  while (repeat)
+  {
+    while (list_size(solutions) > 0)
     {
-      if (height < best_height)
+      list_node *current_solution = list_pop(&solutions);
+      mark_nodes_visited(current_solution);
+      double height = log2(list_size(current_solution)) + 1;
+
+      if (graph_all_visited(graph))
       {
-        best_height = height;
-        best_solution = current_solution;
-        if (height == ideal_height)
+        // TODO: Inform others about best solution.
+        if (height < best_height)
         {
-          break;
+          best_height = height;
+          best_solution = current_solution;
+          if (height == ideal_height)
+          {
+            repeat = 0;
+            break;
+          }
         }
       }
-    }
-    else if (height < best_height)
-    {
-      find_solution(&solutions, current_solution, list_size(current_solution));
+      else if (height < best_height)
+      {
+        find_solution(&solutions, current_solution, list_size(current_solution));
+      }
+
+      mark_nodes_unvisited(current_solution);
+      list_free(current_solution);
     }
 
-    mark_nodes_unvisited(current_solution);
-    list_free(current_solution);
+    if (my_rank == 0)
+    {
+      int finished_count = 0;
+
+      int i;
+      for (i = 1; i < p; i++)
+      {
+        MPI_Send(NULL, 0, MPI_CHAR, p, TAG_FINISHED, MPI_COMM_WORLD);
+      }
+
+      for (i = 1; i < p; i++)
+      {
+        MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, MPI_ANY_SOURCE, TAG_FINISHED,
+            MPI_COMM_WORLD, &status);
+
+        if (message_is_finished(message))
+        {
+          finished_count += 1;
+        }
+      }
+
+      if (finished_count == p - 1)
+      {
+        repeat = 0;
+
+        for (i = 1; i < p; i++)
+        {
+          MPI_Send(NULL, 0, MPI_CHAR, p, TAG_FINISH, MPI_COMM_WORLD);
+        }
+
+        break;
+      }
+    }
+    else
+    {
+      int flag = 0;
+      MPI_Iprobe(MPI_ANY_SOURCE, TAG_FINISH, MPI_COMM_WORLD, &flag, &status);
+      if (flag)
+      {
+        break;
+      }
+    }
+
+    MPI_Send(NULL, 0, MPI_CHAR, 0, TAG_REQUEST_DATA, MPI_COMM_WORLD);
+    MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, 0, TAG_DATA, MPI_COMM_WORLD,
+      &status);
+    solutions = message_deserialize(message);
   }
 
   dump_solution(best_solution);
   graph_free(graph);
+  MPI_Finalize();
 
   return 0;
 }
