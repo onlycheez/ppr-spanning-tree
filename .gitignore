@@ -1,8 +1,11 @@
 # Matrix generator
 generator.bin
 
-# OUtput binary
+# Output binary
 tree
+
+# Vagrant 
+.vagrant
 
 # Object files
 *.o
