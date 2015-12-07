@@ -9,7 +9,7 @@
 
 #define TAG_REQUEST_DATA 1
 #define TAG_DATA 2
-#define TAG_FINISHED 3
+#define TAG_IS_FINISHED 3
 #define TAG_FINISH 4
 
 #define MSG_LENGTH 128
@@ -117,6 +117,32 @@ int message_is_finished()
   return NULL;
 }
 
+int are_others_finished(int p)
+{
+  int finished_count = 0;
+  MPI_Status status;
+  char message[1];
+  int i;
+
+  for (i = 1; i < p; i++)
+  {
+    MPI_Send(NULL, 0, MPI_CHAR, p, TAG_IS_FINISHED, MPI_COMM_WORLD);
+  }
+
+  for (i = 1; i < p; i++)
+  {
+    MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, MPI_ANY_SOURCE,
+        TAG_IS_FINISHED, MPI_COMM_WORLD, &status);
+
+    if (message_is_finished(message))
+    {
+      finished_count += 1;
+    }
+  }
+
+  return finished_count == (p - 1);
+}
+
 int main(int argc, char *argv[])
 {
   char message[MSG_LENGTH];
@@ -140,7 +166,8 @@ int main(int argc, char *argv[])
   else
   {
     MPI_Send(NULL, 0, MPI_CHAR, 0, TAG_REQUEST_DATA, MPI_COMM_WORLD);
-    MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, 0, TAG_DATA, MPI_COMM_WORLD, &status);
+    MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, 0, TAG_DATA, MPI_COMM_WORLD,
+      &status);
     solutions = message_deserialize(message);
   }
 
@@ -179,29 +206,11 @@ int main(int argc, char *argv[])
 
     if (my_rank == 0)
     {
-      int finished_count = 0;
-
-      int i;
-      for (i = 1; i < p; i++)
-      {
-        MPI_Send(NULL, 0, MPI_CHAR, p, TAG_FINISHED, MPI_COMM_WORLD);
-      }
-
-      for (i = 1; i < p; i++)
-      {
-        MPI_Recv(&message, MSG_LENGTH, MPI_CHAR, MPI_ANY_SOURCE, TAG_FINISHED,
-            MPI_COMM_WORLD, &status);
-
-        if (message_is_finished(message))
-        {
-          finished_count += 1;
-        }
-      }
-
-      if (finished_count == p - 1)
+      if (are_others_finished(p))
       {
         repeat = 0;
 
+        int i;
         for (i = 1; i < p; i++)
         {
           MPI_Send(NULL, 0, MPI_CHAR, p, TAG_FINISH, MPI_COMM_WORLD);
@@ -213,7 +222,7 @@ int main(int argc, char *argv[])
     else
     {
       int flag = 0;
-      MPI_Iprobe(MPI_ANY_SOURCE, TAG_FINISH, MPI_COMM_WORLD, &flag, &status);
+      MPI_Iprobe(0, TAG_FINISH, MPI_COMM_WORLD, &flag, &status);
       if (flag)
       {
         break;
