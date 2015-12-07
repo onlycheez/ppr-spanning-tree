@@ -12,6 +12,7 @@
 #define TAG_ARE_YOU_FINISHED 3
 #define TAG_MY_FINISH_STATUS 4
 #define TAG_FINISH 5
+#define TAG_BEST_SOLUTION 6
 
 #define MSG_LENGTH 1024 * 1024
 #define MAX_IPC_LENGTH 5000
@@ -24,6 +25,9 @@ typedef struct _mpi_msg
 
 #define MSG_FINSIHED 1
 #define MSG_NOT_FINSIHED 2
+
+double best_height = 1000.0;
+list_node *best_solution;
 
 mpi_msg* message_serialize_state(char is_finished)
 {
@@ -132,6 +136,21 @@ void find_solution(list_node** solutions, list_node* current_solution, int size)
           printf("find_solution: received request to finish from %d\n",
             status.MPI_SOURCE);
           break;
+        case TAG_BEST_SOLUTION:
+        {
+          list_node *other_best_solution = message_deserialize_data(buffer);
+          double other_best_height = log2(list_size(other_best_solution)) + 1;
+          if (other_best_height < best_height)
+          {
+            best_height = other_best_height;
+            best_solution = other_best_solution;
+          }
+          else
+          {
+            list_free(other_best_solution);
+          }
+          break;
+        }
         default:
           printf("Unhandled switch branch - %d\n", status.MPI_TAG);
       }
@@ -222,9 +241,6 @@ void mark_nodes_unvisited(list_node *root)
 {
   mark_nodes(root, 0);
 }
-
-double best_height = 1000.0;
-list_node *best_solution;
 
 int are_others_finished(int p)
 {
@@ -356,10 +372,19 @@ int main(int argc, char *argv[])
         {
           best_height = height;
           best_solution = current_solution;
-          if (height == ideal_height)
+
+          mpi_msg *message = message_serialize_data(best_solution);
+
+          int i;
+          for (i = 0; i < p; i++)
           {
-            repeat = 0;
-            break;
+            if (i == my_rank)
+            {
+              continue;
+            }
+
+            MPI_Send(&message->data, message->length, MPI_CHAR, i,
+              TAG_BEST_SOLUTION, MPI_COMM_WORLD);
           }
         }
       }
@@ -421,6 +446,21 @@ int main(int argc, char *argv[])
           case TAG_FINISH:
             repeat = 0;
             break;
+          case TAG_BEST_SOLUTION:
+          {
+            list_node *other_best_solution = message_deserialize_data(buffer);
+            double other_best_height = log2(list_size(other_best_solution)) + 1;
+            if (other_best_height < best_height)
+            {
+              best_height = other_best_height;
+              best_solution = other_best_solution;
+            }
+            else
+            {
+              list_free(other_best_solution);
+            }
+            break;
+          }
           default:
             printf("Unhandled switch branch - %d\n", status.MPI_TAG);
         }
@@ -441,7 +481,10 @@ int main(int argc, char *argv[])
     solutions = message_deserialize_data(buffer);
   }
 
-  dump_solution(best_solution);
+  if (my_rank == 0)
+  {
+    dump_solution(best_solution);
+  }
   graph_free(graph);
   MPI_Finalize();
 
