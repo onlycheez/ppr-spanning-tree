@@ -4,7 +4,7 @@ HDR=graph.h list.h
 LIB=-lm
 
 all: $(SRC) $(HDR)
-	$(CC) $(SRC) $(LIB) -ggdb -o tree
+	$(CC) $(SRC) $(LIB) -O0 -ggdb -o tree
 
 clean:
 	rm tree
