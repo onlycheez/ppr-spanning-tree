@@ -307,7 +307,7 @@ int are_others_finished(int p)
 
   for (i = 1; i < p; i++)
   {
-    MPI_Send(NULL, 0, MPI_CHAR, p, TAG_ARE_YOU_FINISHED, MPI_COMM_WORLD);
+    MPI_Send(NULL, 0, MPI_CHAR, i, TAG_ARE_YOU_FINISHED, MPI_COMM_WORLD);
   }
 
   for (i = 1; i < p; i++)
