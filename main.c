@@ -15,8 +15,8 @@
 #define TAG_FINISH 5
 #define TAG_BEST_SOLUTION 6
 
-#define MSG_LENGTH 1024 * 1024
-#define MAX_IPC_LENGTH 5000
+#define MSG_LENGTH 70 * 1000
+#define MAX_IPC_LENGTH 1000
 
 typedef struct _mpi_msg
 {
@@ -144,19 +144,14 @@ list_node* cut_stack(list_node *root)
 }
 
 int _recursion_count = 0;
-int __recursion_count = 0;
 int leaving = 0;
 
 void find_solution(struct graph *graph, list_node** solutions,
   list_node* current_solution, int size)
 {
-  printf("after graph: 0x%x\n", graph);
-  printf("after solutions: 0x%x\n", solutions);
   _recursion_count += 1;
-  __recursion_count += 1;
-  if (_recursion_count == 5000)
+  if (_recursion_count == 200)
   {
-    printf("__recursion_count: %d\n", __recursion_count);
     _recursion_count = 0;
 
     MPI_Status status;
@@ -249,15 +244,11 @@ void find_solution(struct graph *graph, list_node** solutions,
         neighbor->visited = 1;
       }
 
-      printf("before graph: 0x%x\n", graph);
-      printf("before solutions: 0x%x\n", solutions);
       find_solution(graph, solutions, new_solution, size);
       neighbor->visited = 0;
       list_free(new_solution);
     }
   }
-
-  printf("leaving find_solution %d\n", leaving++);
 }
 
 void dump_solution(list_node *root)
