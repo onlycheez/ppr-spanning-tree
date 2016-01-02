@@ -109,7 +109,7 @@ struct graph* graph_new_from_file(const char *filename)
   // + 1 for dummy vertex
   graph->nodes = graph_init_node_array(graph->size + 1);
   int node_nr = 0;
-  char *line = malloc(line_length);
+  char *line = malloc(line_length * 2);
 
   graph->nodes[graph->size] = graph_init_dummy_node();
 

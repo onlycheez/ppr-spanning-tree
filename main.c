@@ -86,8 +86,13 @@ mpi_msg* message_serialize_data(list_node *root)
 
 list_node* message_deserialize_data(struct graph *graph, char *data)
 {
-    int length = strlen(data);
+  int length = strlen(data);
   int idx = 0;
+
+ if (length == 1 && data[0] == -1)
+ {
+   return NULL;
+ }
 
   list_node *solutions = NULL;
   list_node *solution = NULL;
@@ -345,6 +350,7 @@ int last_asked(int p, int my_rank)
 
 int main(int argc, char *argv[])
 {
+  double start_time = MPI_Wtime();
   char buffer[MSG_LENGTH];
   MPI_Status status;
   int my_rank, p;
@@ -379,7 +385,7 @@ int main(int argc, char *argv[])
       switch (status.MPI_TAG)
       {
         case TAG_REQUEST_DATA:
-          printf("p %d received data request\n", p);
+          //printf("p %d received data request\n", p);
           message = message_serialize_data(NULL);
           MPI_Send(&message->data, message->length, MPI_CHAR, status.MPI_SOURCE,
             TAG_DATA, MPI_COMM_WORLD);
@@ -469,7 +475,7 @@ int main(int argc, char *argv[])
         int i;
         for (i = 1; i < p; i++)
         {
-          MPI_Send(NULL, 0, MPI_CHAR, p, TAG_FINISH, MPI_COMM_WORLD);
+          MPI_Send(NULL, 0, MPI_CHAR, i, TAG_FINISH, MPI_COMM_WORLD);
         }
 
         break;
@@ -548,8 +554,10 @@ int main(int argc, char *argv[])
   if (my_rank == 0)
   {
     dump_solution(best_solution);
+    printf("Execution time is %f\n", MPI_Wtime() - start_time);
   }
   graph_free(graph);
+  printf("[%d] terminating...\n", my_rank);
   MPI_Finalize();
 
   return 0;
